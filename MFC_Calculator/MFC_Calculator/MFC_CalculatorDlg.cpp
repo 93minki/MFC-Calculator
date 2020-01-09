@@ -57,7 +57,7 @@ CMFC_CalculatorDlg::CMFC_CalculatorDlg(CWnd* pParent /*=NULL*/)
 	, m_priority(0)
 	, m_search_N(0)
 	, m_search_S(0)
-	, TempArray(0)
+	
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -250,9 +250,9 @@ void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 
 			pr = MakePriority(st[i]);
 			m_search_S = i;
-			for (int tp = 0; m_search_N < m_search_S; tp++,m_search_N++) {
+			/*for (int tp = 0; m_search_N < m_search_S; tp++,m_search_N++) {
 				TempArray[tp] = m_inputstream[m_search_N];
-			}
+			}*/
 			m_search_N = m_search_S + 1;
 			
 				
@@ -448,7 +448,7 @@ bool CMFC_CalculatorDlg::CheckFormula(int num)
 {
 	if (m_inputstream[num + 1] == '\0') {
 		MessageBox(_T("Wrong"), _T("Wrong Formula"), MB_ICONWARNING);
-		return;
+		return true;
 	}
 	return false;
 }
