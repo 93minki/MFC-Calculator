@@ -241,21 +241,7 @@ void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 	//char opr;
 
 	char* st = LPSTR(LPCTSTR(m_inputstream));						// CString inputstream 을 Char형으로 Type Casting.
-	for (int i = 0; i < 30; i++) {
-		if (st[i] == '+' || st[i] == '-' || st[i] == '*' || st[i] == '/') {
-			if (CheckFormula(i))
-				return;
 
-			pr = MakePriority(st[i]);
-			m_search_S = i;
-			for (int tp = 0; m_search_N < m_search_S; tp++,m_search_N++) {
-				TempArray[tp] = m_inputstream[m_search_N];
-			}
-			m_search_N = m_search_S + 1;
-			
-				
-		}
-	}
 }
 
 
