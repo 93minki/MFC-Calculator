@@ -83,5 +83,5 @@ public:
 	int GetStackSize();
 	int m_search_N;
 	int m_search_S;
-	char TempArray[30];
+//	char TempArray[30];
 };

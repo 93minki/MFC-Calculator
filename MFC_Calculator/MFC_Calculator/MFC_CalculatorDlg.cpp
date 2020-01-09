@@ -6,6 +6,7 @@
 #include "MFC_Calculator.h"
 #include "MFC_CalculatorDlg.h"
 #include "afxdialogex.h"
+#include <stack>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -57,7 +58,7 @@ CMFC_CalculatorDlg::CMFC_CalculatorDlg(CWnd* pParent /*=NULL*/)
 	, m_priority(0)
 	, m_search_N(0)
 	, m_search_S(0)
-	, TempArray(0)
+	
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -215,16 +216,13 @@ void CMFC_CalculatorDlg::OnClickedButton11()						// .
 
 	int finddot = m_inputstream.Find('.',m_findindex);
 
-	if (finddot != -1) {
-		m_findindex = m_streamlength + 1;
-		return;
-	}
-
 	if (tchar == '.') {
 		return;
 	}
-	else {
+
+	if (finddot == -1) {
 		UpdateInputEdit('.');
+		return;
 	}
 }
 
@@ -232,32 +230,33 @@ void CMFC_CalculatorDlg::OnClickedButton11()						// .
 void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	int StackSize = GetStackSize();
-	int oldpr = 4;
-	int pr;
-	int pop1;
-	int pop2;
-	bool calcFlag = false;
-	bool shiftFlag = false;
-	int rst = 0;
-	char opr;
+	//int StackSize = GetStackSize();
+	//int oldpr = 4;
+	//int pr;
+	//int pop1;
+	//int pop2;
+	//bool calcFlag = false;
+	//bool shiftFlag = false;
+	//int rst = 0;
+	//char opr;
 
-	char* st = LPSTR(LPCTSTR(m_inputstream));						// CString inputstream 을 Char형으로 Type Casting.
-	for (int i = 0; i < 30; i++) {
-		if (st[i] == '+' || st[i] == '-' || st[i] == '*' || st[i] == '/') {
-			if (CheckFormula(i))
-				return;
+	//char* st = LPSTR(LPCTSTR(m_inputstream));						// CString inputstream 을 Char형으로 Type Casting.
+	//SetDlgItemText(IDC_EDIT2, (LPCTSTR)st);
+	//for (int i = 0; i < 30; i++) {
+	//	if (st[i] == '+' || st[i] == '-' || st[i] == '*' || st[i] == '/') {
+	//		if (CheckFormula(i))
+	//			return;
 
-			pr = MakePriority(st[i]);
-			m_search_S = i;
-			for (int tp = 0; m_search_N < m_search_S; tp++,m_search_N++) {
-				TempArray[tp] = m_inputstream[m_search_N];
-			}
-			m_search_N = m_search_S + 1;
-			
-				
-		}
-	}
+	//		pr = MakePriority(st[i]);
+	//		m_search_S = i;
+	//		for (int tp = 0; m_search_N < m_search_S; tp++,m_search_N++) {
+	//		
+	//		}
+	//		m_search_N = m_search_S + 1;
+	//		
+	//			
+	//	}
+	//}
 }
 
 
@@ -266,6 +265,7 @@ void CMFC_CalculatorDlg::OnClickedButton13()						// /
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	char tchar;
 	m_streamlength = m_inputstream.GetLength() - 1;					// 1 개 함수로 가능?
+	m_findindex = m_streamlength;
 	tchar = m_inputstream.GetAt(m_streamlength);
 	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
 		m_inputstream.SetAt(m_streamlength, '/');
@@ -281,6 +281,7 @@ void CMFC_CalculatorDlg::OnClickedButton14()						// *
 {
 	char tchar;
 	m_streamlength = m_inputstream.GetLength() - 1;
+	m_findindex = m_streamlength;
 	tchar = m_inputstream.GetAt(m_streamlength);
 	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
 		m_inputstream.SetAt(m_streamlength, '*');
@@ -297,6 +298,7 @@ void CMFC_CalculatorDlg::OnClickedButton15()						// -
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	char tchar;
 	m_streamlength = m_inputstream.GetLength() - 1;
+	m_findindex = m_streamlength;
 	tchar = m_inputstream.GetAt(m_streamlength);
 	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
 		m_inputstream.SetAt(m_streamlength, '-');
@@ -313,6 +315,7 @@ void CMFC_CalculatorDlg::OnClickedButton16()						// +
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	char tchar;
 	m_streamlength = m_inputstream.GetLength() - 1;
+	m_findindex = m_streamlength;
 	tchar = m_inputstream.GetAt(m_streamlength);
 	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
 		m_inputstream.SetAt(m_streamlength, '+');
@@ -448,7 +451,7 @@ bool CMFC_CalculatorDlg::CheckFormula(int num)
 {
 	if (m_inputstream[num + 1] == '\0') {
 		MessageBox(_T("Wrong"), _T("Wrong Formula"), MB_ICONWARNING);
-		return;
+		return true;
 	}
 	return false;
 }
