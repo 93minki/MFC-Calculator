@@ -6,12 +6,10 @@
 #include "MFC_Calculator.h"
 #include "MFC_CalculatorDlg.h"
 #include "afxdialogex.h"
-#include <stack>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
@@ -59,6 +57,9 @@ CMFC_CalculatorDlg::CMFC_CalculatorDlg(CWnd* pParent /*=NULL*/)
 	, m_search_N(0)
 	, m_search_S(0)
 	
+	, m_nsp(0)
+	, m_ssp(0)
+	, m_cleanflag(false)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -112,6 +113,7 @@ BEGIN_MESSAGE_MAP(CMFC_CalculatorDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON9, &CMFC_CalculatorDlg::OnClickedButton9)
 	ON_EN_CHANGE(IDC_EDIT1, &CMFC_CalculatorDlg::OnChangeEdit1)
 	ON_EN_CHANGE(IDC_EDIT2, &CMFC_CalculatorDlg::OnChangeEdit2)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -147,7 +149,18 @@ BOOL CMFC_CalculatorDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
-
+	AllocConsole();
+	freopen("CONOUT$", "wt", stdout);
+	m_nsp = -1;
+	m_ssp = -1;
+	/*StackNum[MAX_SIZE] = { '\0', };
+	StackSymbol[MAX_SIZE] = { '\0', };
+	TempArray[MAX_SIZE] = { '\0', };*/
+	for (int i = 0; i < MAX_SIZE; i++) {
+		StackNum[i] = '\0';
+		StackSymbol[i] = '\0';
+		TempArray[i] = '\0';
+	}
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -200,9 +213,33 @@ HCURSOR CMFC_CalculatorDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-void CMFC_CalculatorDlg::OnClickedButton18()
+void CMFC_CalculatorDlg::OnClickedButton18()						// Clear
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	/*for (int a = 0; a < sizeof(InputNum); a++) {
+		if (InputNum[a] == '\0') {
+			break;
+		}
+		InputNum[a] = '\0';
+	}*/
+	NumStackPop();
+	m_inputstream.Empty();
+
+
+	/*for (int b = 0; b < sizeof(showfloat); b++) {
+		if (showfloat[b] == '\0') {
+			break;
+		}
+		showfloat[b] = '\0';
+	}*/
+	showFloat.Empty();
+
+	/*InputNum[0] = '0';
+	np = 0;*/
+	m_search_N = 0;
+	m_search_S = 0;
+	SetDlgItemText(IDC_EDIT1, _T("0"));
+	SetDlgItemText(IDC_EDIT2, _T("0"));
 }
 
 void CMFC_CalculatorDlg::OnClickedButton11()						// .
@@ -230,17 +267,96 @@ void CMFC_CalculatorDlg::OnClickedButton11()						// .
 void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	//int StackSize = GetStackSize();
-	//int oldpr = 4;
-	//int pr;
-	//int pop1;
-	//int pop2;
-	//bool calcFlag = false;
-	//bool shiftFlag = false;
-	//int rst = 0;
-	//char opr;
 
-	char* st = LPSTR(LPCTSTR(m_inputstream));						// CString inputstream 을 Char형으로 Type Casting.
+	//********************************* CString -> Character Type Array **********************************//
+	char inputstream[MAX_SIZE];
+	size_t CharactersConverted = 0;
+	wcstombs_s(&CharactersConverted, inputstream, m_inputstream.GetLength() + 1, m_inputstream, _TRUNCATE);
+	printf("Input Stream : %s\n", inputstream);
+	//****************************************************************************************************//
+
+	/* 변수 선언 */
+	int oldpri = 4;
+	int pri;
+
+	bool calcFlag = false;
+	bool shiftFlag = false;
+
+
+
+	for (int i = 0; i < m_inputstream.GetLength(); i++) {
+		if (inputstream[i] == '+' || inputstream[i] == '-' || inputstream[i] == '*' || inputstream[i] == '/') {
+			if (CheckFormula(i)) {
+				return;
+			}
+			pri = MakePriority(inputstream[i]);
+			m_search_S = i;
+			for (int tp = 0; m_search_N < m_search_S; m_search_N++, tp++) {
+				TempArray[tp] = inputstream[m_search_N];
+			}
+			m_search_N = m_search_S + 1;
+			if (shiftFlag) {
+				NumStackPush(atof(TempArray)*-1);
+				shiftFlag = false;
+			}
+			else {
+				NumStackPush(atof(TempArray));
+			}
+			InitTempArray();
+			if (calcFlag) {
+				Calculation();
+				SymStackPush(inputstream[i]);
+				calcFlag = false;
+			}
+			else if (oldpri == 4) {
+				SymStackPush(inputstream[i]);
+				oldpri = pri;
+			}
+			else if (oldpri < pri) {
+				Calculation();
+				SymStackPush(inputstream[i]);
+				oldpri = pri;
+			}
+			else if (oldpri == pri) {
+				Calculation();
+				SymStackPush(inputstream[i]);
+				oldpri = pri;
+			}
+			else if (oldpri > pri) {
+				SymStackPush(inputstream[i]);
+				calcFlag = true;
+			}
+
+			if (inputstream[i] == '-') {
+				StackSymbol[m_ssp] = '+';
+				shiftFlag = true;
+			}
+		}
+
+		if (inputstream[i + 1] == '\0') {
+			m_search_S = i + 1;
+			for (int tp = 0; m_search_N < m_search_S; m_search_N++, tp++) {
+				TempArray[tp] = inputstream[m_search_N];
+			}
+			if (shiftFlag) {
+				NumStackPush(atof(TempArray)*-1);
+			}
+			else {
+				NumStackPush(atof(TempArray));
+			}
+
+			for (int x = 0; !IsSymStackEmpty(); x++) {
+				Calculation();
+			}
+			InitTempArray();
+			//**************** float --> CString *****************//
+			showFloat.Format(_T("%0.2f"), StackNum[0]);
+			m_cleanflag = true;
+			SetDlgItemText(IDC_EDIT2, showFloat);
+			return;
+		}
+		
+	}
 
 }
 
@@ -312,9 +428,25 @@ void CMFC_CalculatorDlg::OnClickedButton16()						// +
 }
 
 
-void CMFC_CalculatorDlg::OnClickedButton17()
+void CMFC_CalculatorDlg::OnClickedButton17()							//C
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+	if (m_cleanflag) {
+		NumStackPop();
+		m_inputstream.Empty();
+		showFloat.Empty();
+		m_search_N = 0;
+		m_search_S = 0;
+		SetDlgItemText(IDC_EDIT1, _T("0"));
+		SetDlgItemText(IDC_EDIT2, _T("0"));
+		m_cleanflag = false;
+		return;
+	}
+	m_findindex = m_inputstream.GetLength() - 1;
+	
+	m_inputstream.Delete(m_findindex, 1);
+
+	SetDlgItemText(IDC_EDIT1, m_inputstream);
 }
 
 void CMFC_CalculatorDlg::OnClickedButton1()
@@ -435,7 +567,7 @@ int CMFC_CalculatorDlg::MakePriority(char symbol)
 bool CMFC_CalculatorDlg::CheckFormula(int num)
 {
 	if (m_inputstream[num + 1] == '\0') {
-		MessageBox(_T("Wrong"), _T("Wrong Formula"), MB_ICONWARNING);
+		MessageBox(_T("Wrong Formula"), _T("Check Formula"), MB_ICONWARNING);
 		return true;
 	}
 	return false;
@@ -445,10 +577,148 @@ bool CMFC_CalculatorDlg::CheckFormula(int num)
 int CMFC_CalculatorDlg::GetStackSize()
 {
 	int StackSize;
-	for (int a = 0; a < 30; a++) {
+	for (int a = 0; a < MAX_SIZE; a++) {
 		if (m_inputstream[a] == '\0') {
 			StackSize = a;
 			return a;
 		}
+	}
+}
+
+
+void CMFC_CalculatorDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	// TODO: 여기에 메시지 처리기 코드를 추가합니다.
+	FreeConsole();
+}
+
+
+bool CMFC_CalculatorDlg::IsNumStackEmpty()
+{
+	if (m_nsp < 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool CMFC_CalculatorDlg::IsSymStackEmpty() {
+	if (m_ssp < 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool CMFC_CalculatorDlg::IsNumStackFull() {
+	if (m_nsp > MAX_SIZE) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool CMFC_CalculatorDlg::IsSymStackFull() {
+	if (m_ssp > MAX_SIZE) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void CMFC_CalculatorDlg::NumStackPush(float value) {
+	if (IsNumStackFull() == true) {
+		printf("Num Stack is Full!!!\n");
+	}
+	else {
+		StackNum[++m_nsp] = value;
+	}
+
+}
+
+void CMFC_CalculatorDlg::SymStackPush(char value) {
+	if (IsSymStackFull() == true) {
+		printf("Sym Stack is Full!!!\n");
+	}
+	else {
+		StackSymbol[++m_ssp] = value;
+	}
+}
+
+float CMFC_CalculatorDlg::NumStackPop() {
+	float rtnum;
+	if (IsNumStackEmpty() == true) {
+		printf("Num Stack is Empty!!!\n");
+		return 0;
+	}
+	else {
+		rtnum = StackNum[m_nsp];
+		StackNum[m_nsp] = '\0';
+		m_nsp--;
+		return rtnum;
+	}
+	
+}
+
+char CMFC_CalculatorDlg::SymStackPop() {
+	char rtchar;
+	if (IsSymStackEmpty() == true) {
+		printf("Sym Stack is Empty!!!\n");
+		return 0;
+	}
+	else {
+		rtchar = StackSymbol[m_ssp];
+		StackSymbol[m_ssp] = '\0';
+		m_ssp--;
+		return rtchar;
+	}
+
+}
+
+void CMFC_CalculatorDlg::InitTempArray()
+{
+	for (int i = 0; i < sizeof(TempArray); i++) {
+		TempArray[i] = '\0';
+		if (TempArray[i + 1] == '\0') {
+			return;
+		}
+	}
+}
+
+
+void CMFC_CalculatorDlg::Calculation()
+{
+	float pop1;
+	float pop2;
+	char opr;
+	float rst;
+
+	pop1 = NumStackPop();
+	pop2 = NumStackPop();
+	opr = SymStackPop();
+
+	switch (opr) {
+	case '+':
+		rst = pop2 + pop1;
+		NumStackPush(rst);
+		break;
+	case '-':
+		rst = pop2 - pop1;
+		NumStackPush(rst);
+		break;
+	case'*':
+		rst = pop2 * pop1;
+		NumStackPush(rst);
+		break;
+	case '/':
+		rst = pop2 * pop1;
+		NumStackPush(rst);
+		break;
 	}
 }
