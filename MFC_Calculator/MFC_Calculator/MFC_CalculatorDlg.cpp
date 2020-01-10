@@ -1,6 +1,7 @@
 
 // MFC_CalculatorDlg.cpp : 구현 파일
-//
+// 3차 수정 20.01.10 소수점 표기 해결, 연산 미완성
+// 복잡한 연산의 경우 연산이 제대로 안되는 경우 발생
 
 #include "stdafx.h"
 #include "MFC_Calculator.h"
