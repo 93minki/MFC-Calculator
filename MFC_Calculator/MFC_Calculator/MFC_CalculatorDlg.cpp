@@ -1,6 +1,8 @@
 
 // MFC_CalculatorDlg.cpp : 구현 파일
-// 3차 수정 20.01.10 소수점 표기 해결, 연산 미완성
+// 3차 수정 20.01.10 소수점 표기 해결, 연산 미완성 문제 해결
+// / 연산이 * 연산으로 되고 있었음
+// 결과값 소수점 유동적으로 표현 가능하도록 필요.
 // 복잡한 연산의 경우 연산이 제대로 안되는 경우 발생
 
 #include "stdafx.h"
@@ -718,7 +720,7 @@ void CMFC_CalculatorDlg::Calculation()
 		NumStackPush(rst);
 		break;
 	case '/':
-		rst = pop2 * pop1;
+		rst = pop2 / pop1;
 		NumStackPush(rst);
 		break;
 	}
