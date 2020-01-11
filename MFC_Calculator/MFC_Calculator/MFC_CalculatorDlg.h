@@ -111,4 +111,6 @@ public:
 	void InitTempArray();
 	void Calculation();
 	bool m_cleanflag;
+	void ClearEdit();
+	void ShowSymbol(char symbol);
 };

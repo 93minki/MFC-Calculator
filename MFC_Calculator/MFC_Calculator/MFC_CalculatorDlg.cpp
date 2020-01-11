@@ -1,9 +1,9 @@
 
 // MFC_CalculatorDlg.cpp : 구현 파일
-// 3차 수정 20.01.10 소수점 표기 해결, 연산 미완성 문제 해결
-// / 연산이 * 연산으로 되고 있었음
-// 결과값 소수점 유동적으로 표현 가능하도록 필요.
-// 복잡한 연산의 경우 연산이 제대로 안되는 경우 발생
+// 5차 수정 20.01.11 
+// 연산기호 표기 함수화
+// 계산식 처음에 연산기호 사용 제한
+// 소수점 표기시 바로 앞 문자가 연산기호일 경우 0과 함께 . 찍음
 
 #include "stdafx.h"
 #include "MFC_Calculator.h"
@@ -219,30 +219,7 @@ HCURSOR CMFC_CalculatorDlg::OnQueryDragIcon()
 void CMFC_CalculatorDlg::OnClickedButton18()						// Clear
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	/*for (int a = 0; a < sizeof(InputNum); a++) {
-		if (InputNum[a] == '\0') {
-			break;
-		}
-		InputNum[a] = '\0';
-	}*/
-	NumStackPop();
-	m_inputstream.Empty();
-
-
-	/*for (int b = 0; b < sizeof(showfloat); b++) {
-		if (showfloat[b] == '\0') {
-			break;
-		}
-		showfloat[b] = '\0';
-	}*/
-	showFloat.Empty();
-
-	/*InputNum[0] = '0';
-	np = 0;*/
-	m_search_N = 0;
-	m_search_S = 0;
-	SetDlgItemText(IDC_EDIT1, _T("0"));
-	SetDlgItemText(IDC_EDIT2, _T("0"));
+	ClearEdit();
 }
 
 void CMFC_CalculatorDlg::OnClickedButton11()						// .
@@ -261,6 +238,9 @@ void CMFC_CalculatorDlg::OnClickedButton11()						// .
 	}
 
 	if (finddot == -1) {
+		if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == ' /') {
+			UpdateInputEdit('0');
+		}
 		UpdateInputEdit('.');
 		return;
 	}
@@ -367,67 +347,27 @@ void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 void CMFC_CalculatorDlg::OnClickedButton13()						// /
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	char tchar;
-	m_streamlength = m_inputstream.GetLength() - 1;					// 1 개 함수로 가능?
-	m_findindex = m_streamlength;
-	tchar = m_inputstream.GetAt(m_streamlength);
-	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
-		m_inputstream.SetAt(m_streamlength, '/');
-		SetDlgItemText(IDC_EDIT1, m_inputstream);
-	}
-	else {
-		UpdateInputEdit('/');
-	}
+	ShowSymbol('/');
 }
 
 
 void CMFC_CalculatorDlg::OnClickedButton14()						// *
 {
-	char tchar;
-	m_streamlength = m_inputstream.GetLength() - 1;
-	m_findindex = m_streamlength;
-	tchar = m_inputstream.GetAt(m_streamlength);
-	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
-		m_inputstream.SetAt(m_streamlength, '*');
-		SetDlgItemText(IDC_EDIT1, m_inputstream);
-	}
-	else {
-		UpdateInputEdit('*');
-	}
+	ShowSymbol('*');
 }
 
 
 void CMFC_CalculatorDlg::OnClickedButton15()						// -
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	char tchar;
-	m_streamlength = m_inputstream.GetLength() - 1;
-	m_findindex = m_streamlength;
-	tchar = m_inputstream.GetAt(m_streamlength);
-	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
-		m_inputstream.SetAt(m_streamlength, '-');
-		SetDlgItemText(IDC_EDIT1, m_inputstream);
-	}
-	else {
-		UpdateInputEdit('-');
-	}
+	ShowSymbol('-');
 }
 
 
 void CMFC_CalculatorDlg::OnClickedButton16()						// +
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	char tchar;
-	m_streamlength = m_inputstream.GetLength() - 1;
-	m_findindex = m_streamlength;
-	tchar = m_inputstream.GetAt(m_streamlength);
-	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
-		m_inputstream.SetAt(m_streamlength, '+');
-		SetDlgItemText(IDC_EDIT1, m_inputstream);
-	}
-	else {
-		UpdateInputEdit('+');
-	}
+	ShowSymbol('+');
 }
 
 
@@ -435,14 +375,7 @@ void CMFC_CalculatorDlg::OnClickedButton17()							//C
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	if (m_cleanflag) {
-		NumStackPop();
-		m_inputstream.Empty();
-		showFloat.Empty();
-		m_search_N = 0;
-		m_search_S = 0;
-		SetDlgItemText(IDC_EDIT1, _T("0"));
-		SetDlgItemText(IDC_EDIT2, _T("0"));
-		m_cleanflag = false;
+		ClearEdit();
 		return;
 	}
 	m_findindex = m_inputstream.GetLength() - 1;
@@ -723,5 +656,37 @@ void CMFC_CalculatorDlg::Calculation()
 		rst = pop2 / pop1;
 		NumStackPush(rst);
 		break;
+	}
+}
+
+
+void CMFC_CalculatorDlg::ClearEdit()
+{
+	NumStackPop();
+	m_inputstream.Empty();
+	showFloat.Empty();
+	m_search_N = 0;
+	m_search_S = 0;
+	SetDlgItemText(IDC_EDIT1, _T("0"));
+	SetDlgItemText(IDC_EDIT2, _T("0"));
+}
+
+
+void CMFC_CalculatorDlg::ShowSymbol(char symbol)
+{
+	char tchar;
+	if (m_inputstream == "\0") {
+		MessageBox(_T("Wrong Formula"), _T("Check Formula"), MB_ICONWARNING);
+		return;
+	}
+	m_streamlength = m_inputstream.GetLength() - 1;
+	m_findindex = m_streamlength;
+	tchar = m_inputstream.GetAt(m_streamlength);
+	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
+		m_inputstream.SetAt(m_streamlength, symbol);
+		SetDlgItemText(IDC_EDIT1, m_inputstream);
+	}
+	else {
+		UpdateInputEdit(symbol);
 	}
 }
