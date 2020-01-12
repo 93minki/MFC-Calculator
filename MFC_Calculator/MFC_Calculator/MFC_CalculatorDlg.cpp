@@ -156,9 +156,7 @@ BOOL CMFC_CalculatorDlg::OnInitDialog()
 	freopen("CONOUT$", "wt", stdout);
 	m_nsp = -1;
 	m_ssp = -1;
-	/*StackNum[MAX_SIZE] = { '\0', };
-	StackSymbol[MAX_SIZE] = { '\0', };
-	TempArray[MAX_SIZE] = { '\0', };*/
+
 	for (int i = 0; i < MAX_SIZE; i++) {
 		StackNum[i] = '\0';
 		StackSymbol[i] = '\0';
