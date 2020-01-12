@@ -1,9 +1,7 @@
 
 // MFC_CalculatorDlg.cpp : 구현 파일
-// 3차 수정 20.01.10 소수점 표기 해결, 연산 미완성 문제 해결
-// / 연산이 * 연산으로 되고 있었음
-// 결과값 소수점 유동적으로 표현 가능하도록 필요.
-// 복잡한 연산의 경우 연산이 제대로 안되는 경우 발생
+// 6차 수정 20.01.12
+// Edit Control에서 키보드로 입력받아 연산 구현 중
 
 #include "stdafx.h"
 #include "MFC_Calculator.h"
@@ -63,6 +61,7 @@ CMFC_CalculatorDlg::CMFC_CalculatorDlg(CWnd* pParent /*=NULL*/)
 	, m_nsp(0)
 	, m_ssp(0)
 	, m_cleanflag(false)
+	, m_clearflag(false)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -117,6 +116,7 @@ BEGIN_MESSAGE_MAP(CMFC_CalculatorDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT1, &CMFC_CalculatorDlg::OnChangeEdit1)
 	ON_EN_CHANGE(IDC_EDIT2, &CMFC_CalculatorDlg::OnChangeEdit2)
 	ON_WM_DESTROY()
+//	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 
@@ -219,30 +219,7 @@ HCURSOR CMFC_CalculatorDlg::OnQueryDragIcon()
 void CMFC_CalculatorDlg::OnClickedButton18()						// Clear
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	/*for (int a = 0; a < sizeof(InputNum); a++) {
-		if (InputNum[a] == '\0') {
-			break;
-		}
-		InputNum[a] = '\0';
-	}*/
-	NumStackPop();
-	m_inputstream.Empty();
-
-
-	/*for (int b = 0; b < sizeof(showfloat); b++) {
-		if (showfloat[b] == '\0') {
-			break;
-		}
-		showfloat[b] = '\0';
-	}*/
-	showFloat.Empty();
-
-	/*InputNum[0] = '0';
-	np = 0;*/
-	m_search_N = 0;
-	m_search_S = 0;
-	SetDlgItemText(IDC_EDIT1, _T("0"));
-	SetDlgItemText(IDC_EDIT2, _T("0"));
+	ClearEdit();
 }
 
 void CMFC_CalculatorDlg::OnClickedButton11()						// .
@@ -261,6 +238,9 @@ void CMFC_CalculatorDlg::OnClickedButton11()						// .
 	}
 
 	if (finddot == -1) {
+		if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == ' /') {
+			UpdateInputEdit('0');
+		}
 		UpdateInputEdit('.');
 		return;
 	}
@@ -270,7 +250,8 @@ void CMFC_CalculatorDlg::OnClickedButton11()						// .
 void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-
+	m_inputstream.Remove(' ');			// 공백 문자 제거
+	printf("m_inputstream : %s", m_inputstream);
 	//********************************* CString -> Character Type Array **********************************//
 	char inputstream[MAX_SIZE];
 	size_t CharactersConverted = 0;
@@ -368,33 +349,13 @@ void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 void CMFC_CalculatorDlg::OnClickedButton13()						// /
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	char tchar;
-	m_streamlength = m_inputstream.GetLength() - 1;					// 1 개 함수로 가능?
-	m_findindex = m_streamlength;
-	tchar = m_inputstream.GetAt(m_streamlength);
-	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
-		m_inputstream.SetAt(m_streamlength, '/');
-		SetDlgItemText(IDC_EDIT1, m_inputstream);
-	}
-	else {
-		UpdateInputEdit('/');
-	}
+	ShowSymbol('/');
 }
 
 
 void CMFC_CalculatorDlg::OnClickedButton14()						// *
 {
-	char tchar;
-	m_streamlength = m_inputstream.GetLength() - 1;
-	m_findindex = m_streamlength;
-	tchar = m_inputstream.GetAt(m_streamlength);
-	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
-		m_inputstream.SetAt(m_streamlength, '*');
-		SetDlgItemText(IDC_EDIT1, m_inputstream);
-	}
-	else {
-		UpdateInputEdit('*');
-	}
+	ShowSymbol('*');
 }
 
 
@@ -402,7 +363,6 @@ void CMFC_CalculatorDlg::OnClickedButton15()						// -
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	char tchar;
-
 	m_streamlength = m_inputstream.GetLength() - 1;
 	m_findindex = m_streamlength;
 	tchar = m_inputstream.GetAt(m_streamlength);
@@ -419,17 +379,7 @@ void CMFC_CalculatorDlg::OnClickedButton15()						// -
 void CMFC_CalculatorDlg::OnClickedButton16()						// +
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-	char tchar;
-	m_streamlength = m_inputstream.GetLength() - 1;
-	m_findindex = m_streamlength;
-	tchar = m_inputstream.GetAt(m_streamlength);
-	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
-		m_inputstream.SetAt(m_streamlength, '+');
-		SetDlgItemText(IDC_EDIT1, m_inputstream);
-	}
-	else {
-		UpdateInputEdit('+');
-	}
+	ShowSymbol('+');
 }
 
 
@@ -437,14 +387,7 @@ void CMFC_CalculatorDlg::OnClickedButton17()							//C
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	if (m_cleanflag) {
-		NumStackPop();
-		m_inputstream.Empty();
-		showFloat.Empty();
-		m_search_N = 0;
-		m_search_S = 0;
-		SetDlgItemText(IDC_EDIT1, _T("0"));
-		SetDlgItemText(IDC_EDIT2, _T("0"));
-		m_cleanflag = false;
+		ClearEdit();
 		return;
 	}
 	m_findindex = m_inputstream.GetLength() - 1;
@@ -522,6 +465,18 @@ void CMFC_CalculatorDlg::OnChangeEdit1()
 	// 이 알림 메시지를 보내지 않습니다.
 
 	// TODO:  여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
+	//CString str;
+	//GetDlgItem(IDC_EDIT1)->GetWindowText(str);
+	//printf("str : %s \n", str);
+	//m_inputstream += str;
+	CString str;
+	int strlen;
+	m_edit_input.GetWindowText(str);
+	strlen = str.GetLength()-1;
+	/*str.GetAt(strlen);*/
+	m_inputstream += str.GetAt(strlen);
+
 }
 
 
@@ -538,7 +493,12 @@ void CMFC_CalculatorDlg::OnChangeEdit2()
 
 void CMFC_CalculatorDlg::UpdateInputEdit(char input)
 {
+	if (m_clearflag) {
+		m_inputstream.Remove('0');
+		m_clearflag = false;
+	}
 	m_inputstream += input;
+	m_inputstream += ' ';
 	SetDlgItemText(IDC_EDIT1, m_inputstream);
 }
 
@@ -697,33 +657,80 @@ void CMFC_CalculatorDlg::InitTempArray()
 }
 
 
-void CMFC_CalculatorDlg::Calculation()
+//void CMFC_CalculatorDlg::Calculation()
+//{
+//	float pop1;
+//	float pop2;
+//	char opr;
+//	float rst;
+//
+//	pop1 = NumStackPop();
+//	pop2 = NumStackPop();
+//	opr = SymStackPop();
+//
+//	switch (opr) {
+//	case '+':
+//		rst = pop2 + pop1;
+//		NumStackPush(rst);
+//		break;
+//	case '-':
+//		rst = pop2 - pop1;
+//		NumStackPush(rst);
+//		break;
+//	case'*':
+//		rst = pop2 * pop1;
+//		NumStackPush(rst);
+//		break;
+//	case '/':
+//		rst = pop2 / pop1;
+//		NumStackPush(rst);
+//		break;
+//	}
+//}
+
+
+void CMFC_CalculatorDlg::ClearEdit()
 {
-	float pop1;
-	float pop2;
-	char opr;
-	float rst;
+	NumStackPop();
+	m_inputstream.Empty();
+	showFloat.Empty();
+	m_search_N = 0;
+	m_search_S = 0;
+	SetDlgItemText(IDC_EDIT1, _T("0"));
+	SetDlgItemText(IDC_EDIT2, _T("0"));
+	m_clearflag = true;
+}
 
-	pop1 = NumStackPop();
-	pop2 = NumStackPop();
-	opr = SymStackPop();
 
-	switch (opr) {
-	case '+':
-		rst = pop2 + pop1;
-		NumStackPush(rst);
-		break;
-	case '-':
-		rst = pop2 - pop1;
-		NumStackPush(rst);
-		break;
-	case'*':
-		rst = pop2 * pop1;
-		NumStackPush(rst);
-		break;
-	case '/':
-		rst = pop2 / pop1;
-		NumStackPush(rst);
-		break;
+void CMFC_CalculatorDlg::ShowSymbol(char symbol)
+{
+	char tchar;
+	if (m_inputstream == "\0") {
+		MessageBox(_T("Wrong Formula"), _T("Check Formula"), MB_ICONWARNING);
+		return;
+	}
+	m_streamlength = m_inputstream.GetLength() - 1;
+	m_findindex = m_streamlength;
+	tchar = m_inputstream.GetAt(m_streamlength);
+	if (tchar == '+' || tchar == '-' || tchar == '*' || tchar == '/') {
+		m_inputstream.SetAt(m_streamlength, symbol);
+		SetDlgItemText(IDC_EDIT1, m_inputstream);
+	}
+	else {
+		UpdateInputEdit(symbol);
 	}
 }
+
+
+//void CMFC_CalculatorDlg::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+//{
+//	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+//	switch (nChar) {
+//	case VK_DOWN:
+//		SetDlgItemText(IDC_EDIT1, _T("1"));
+//		Invalidate();
+//		break;
+//	}
+//	printf("KeyBoard Down!\n");
+//	CDialogEx::OnKeyDown(nChar, nRepCnt, nFlags);
+//}
