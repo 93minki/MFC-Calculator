@@ -1,9 +1,7 @@
 
 // MFC_CalculatorDlg.cpp : 구현 파일
-// 5차 수정 20.01.11 
-// 연산기호 표기 함수화
-// 계산식 처음에 연산기호 사용 제한
-// 소수점 표기시 바로 앞 문자가 연산기호일 경우 0과 함께 . 찍음
+// 6차 수정 20.01.12
+// Edit Control에서 키보드로 입력받아 연산 구현 중
 
 #include "stdafx.h"
 #include "MFC_Calculator.h"
