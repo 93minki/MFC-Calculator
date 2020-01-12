@@ -113,4 +113,5 @@ public:
 	bool m_cleanflag;
 	void ClearEdit();
 	void ShowSymbol(char symbol);
+//	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 };

@@ -117,6 +117,7 @@ BEGIN_MESSAGE_MAP(CMFC_CalculatorDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT1, &CMFC_CalculatorDlg::OnChangeEdit1)
 	ON_EN_CHANGE(IDC_EDIT2, &CMFC_CalculatorDlg::OnChangeEdit2)
 	ON_WM_DESTROY()
+//	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 
@@ -250,7 +251,8 @@ void CMFC_CalculatorDlg::OnClickedButton11()						// .
 void CMFC_CalculatorDlg::OnClickedButton12()						// Enter
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-
+	m_inputstream.Remove(' ');			// 공백 문자 제거
+	printf("m_inputstream : %s", m_inputstream);
 	//********************************* CString -> Character Type Array **********************************//
 	char inputstream[MAX_SIZE];
 	size_t CharactersConverted = 0;
@@ -453,6 +455,18 @@ void CMFC_CalculatorDlg::OnChangeEdit1()
 	// 이 알림 메시지를 보내지 않습니다.
 
 	// TODO:  여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
+	//CString str;
+	//GetDlgItem(IDC_EDIT1)->GetWindowText(str);
+	//printf("str : %s \n", str);
+	//m_inputstream += str;
+	CString str;
+	int strlen;
+	m_edit_input.GetWindowText(str);
+	strlen = str.GetLength()-1;
+	/*str.GetAt(strlen);*/
+	m_inputstream += str.GetAt(strlen);
+
 }
 
 
@@ -470,6 +484,7 @@ void CMFC_CalculatorDlg::OnChangeEdit2()
 void CMFC_CalculatorDlg::UpdateInputEdit(char input)
 {
 	m_inputstream += input;
+	m_inputstream += ' ';
 	SetDlgItemText(IDC_EDIT1, m_inputstream);
 }
 
@@ -690,3 +705,17 @@ void CMFC_CalculatorDlg::ShowSymbol(char symbol)
 		UpdateInputEdit(symbol);
 	}
 }
+
+
+//void CMFC_CalculatorDlg::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+//{
+//	// TODO: 여기에 메시지 처리기 코드를 추가 및/또는 기본값을 호출합니다.
+//	switch (nChar) {
+//	case VK_DOWN:
+//		SetDlgItemText(IDC_EDIT1, _T("1"));
+//		Invalidate();
+//		break;
+//	}
+//	printf("KeyBoard Down!\n");
+//	CDialogEx::OnKeyDown(nChar, nRepCnt, nFlags);
+//}
