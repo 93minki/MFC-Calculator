@@ -61,6 +61,7 @@ CMFC_CalculatorDlg::CMFC_CalculatorDlg(CWnd* pParent /*=NULL*/)
 	, m_nsp(0)
 	, m_ssp(0)
 	, m_cleanflag(false)
+	, m_clearflag(false)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -481,6 +482,10 @@ void CMFC_CalculatorDlg::OnChangeEdit2()
 
 void CMFC_CalculatorDlg::UpdateInputEdit(char input)
 {
+	if (m_clearflag) {
+		m_inputstream.Remove('0');
+		m_clearflag = false;
+	}
 	m_inputstream += input;
 	m_inputstream += ' ';
 	SetDlgItemText(IDC_EDIT1, m_inputstream);
@@ -641,36 +646,36 @@ void CMFC_CalculatorDlg::InitTempArray()
 }
 
 
-void CMFC_CalculatorDlg::Calculation()
-{
-	float pop1;
-	float pop2;
-	char opr;
-	float rst;
-
-	pop1 = NumStackPop();
-	pop2 = NumStackPop();
-	opr = SymStackPop();
-
-	switch (opr) {
-	case '+':
-		rst = pop2 + pop1;
-		NumStackPush(rst);
-		break;
-	case '-':
-		rst = pop2 - pop1;
-		NumStackPush(rst);
-		break;
-	case'*':
-		rst = pop2 * pop1;
-		NumStackPush(rst);
-		break;
-	case '/':
-		rst = pop2 / pop1;
-		NumStackPush(rst);
-		break;
-	}
-}
+//void CMFC_CalculatorDlg::Calculation()
+//{
+//	float pop1;
+//	float pop2;
+//	char opr;
+//	float rst;
+//
+//	pop1 = NumStackPop();
+//	pop2 = NumStackPop();
+//	opr = SymStackPop();
+//
+//	switch (opr) {
+//	case '+':
+//		rst = pop2 + pop1;
+//		NumStackPush(rst);
+//		break;
+//	case '-':
+//		rst = pop2 - pop1;
+//		NumStackPush(rst);
+//		break;
+//	case'*':
+//		rst = pop2 * pop1;
+//		NumStackPush(rst);
+//		break;
+//	case '/':
+//		rst = pop2 / pop1;
+//		NumStackPush(rst);
+//		break;
+//	}
+//}
 
 
 void CMFC_CalculatorDlg::ClearEdit()
@@ -682,6 +687,7 @@ void CMFC_CalculatorDlg::ClearEdit()
 	m_search_S = 0;
 	SetDlgItemText(IDC_EDIT1, _T("0"));
 	SetDlgItemText(IDC_EDIT2, _T("0"));
+	m_clearflag = true;
 }
 
 

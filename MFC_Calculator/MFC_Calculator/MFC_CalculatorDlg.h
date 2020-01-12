@@ -109,9 +109,38 @@ public:
 	// SymStackPoint
 	int m_ssp;
 	void InitTempArray();
-	void Calculation();
+	void Calculation() {
+		float pop1;
+		float pop2;
+		char opr;
+		float rst;
+
+		pop1 = NumStackPop();
+		pop2 = NumStackPop();
+		opr = SymStackPop();
+
+		switch (opr) {
+		case '+':
+			rst = pop2 + pop1;
+			NumStackPush(rst);
+			break;
+		case '-':
+			rst = pop2 - pop1;
+			NumStackPush(rst);
+			break;
+		case'*':
+			rst = pop2 * pop1;
+			NumStackPush(rst);
+			break;
+		case '/':
+			rst = pop2 / pop1;
+			NumStackPush(rst);
+			break;
+		}
+	}
 	bool m_cleanflag;
 	void ClearEdit();
 	void ShowSymbol(char symbol);
 //	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	bool m_clearflag;
 };
